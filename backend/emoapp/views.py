@@ -166,13 +166,64 @@ def logout_view(request):
             except Exception:
                 pass
 
-        return Response({"message": "Logout successful"}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({"message": "Logout successful"}, status=status.HTTP_200_OK)
 
     except Exception as e:
         return Response(
             {"error": "Logout failed", "details": str(e)},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def change_password(request):
+   data = request.data
+
+   old_password = data.get("current_password")
+   new_password = data.get("new_password")
+   new_password2 = data.get("confirm_password")
+
+   try:
+       if not all([old_password, new_password, new_password2]):
+           return Response({
+               "status": "error",
+               "message": "All fields are required"
+           }, status=status.HTTP_400_BAD_REQUEST)
+
+       if new_password != new_password2:
+           return Response({
+               "status": "error",
+               "message": "New passwords do not match"
+           }, status=status.HTTP_400_BAD_REQUEST)
+
+       user = request.user
+
+       if not user.check_password(old_password):
+           return Response({
+               "status": "error",
+               "message": "Current password is incorrect"
+           }, status=status.HTTP_400_BAD_REQUEST)
+
+       if user.check_password(new_password):
+           return Response({
+               "status": "error",
+               "message": "New password cannot be the same as the current password"
+           }, status=status.HTTP_400_BAD_REQUEST)
+
+       user.set_password(new_password)
+       user.save()
+
+       return Response({
+           "status": "success",
+           "message": f"Password has been changed successful"
+       }, status=status.HTTP_200_OK)
+
+   except Exception as e:
+       return Response({
+           "status": "error",
+           "message": "Unable to change password. Please try again."
+       }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 
@@ -257,7 +308,6 @@ def update_profile_view(request):
         
         user.save()
 
-        # Update profile fields
         if 'display_name' in data:
             profile.display_name = data['display_name']
         if 'bio' in data:
@@ -326,7 +376,6 @@ def upload_and_analyze(request):
     
     recording = None
     try:
-        # Create voice recording
         recording = VoiceRecording.objects.create(
             user=request.user.userprofile,
             audio_file=audio_file
@@ -335,7 +384,6 @@ def upload_and_analyze(request):
         # Get file path
         file_path = recording.audio_file.path
         
-        # Verify file exists
         if not os.path.exists(file_path):
             raise FileNotFoundError(f"Audio file not found at {file_path}")
         
@@ -510,7 +558,6 @@ def user_statistics(request):
         emotion_counts[emotion] = emotion_counts.get(emotion, 0) + 1
         total_confidence[emotion] = total_confidence.get(emotion, 0) + analysis.confidence
     
-    # Calculate averages
     emotion_stats = []
     for emotion, count in emotion_counts.items():
         emotion_stats.append({
@@ -520,7 +567,6 @@ def user_statistics(request):
             'percentage': (count / len(analyses) * 100) if len(analyses) > 0 else 0
         })
     
-    # Sort by count
     emotion_stats.sort(key=lambda x: x['count'], reverse=True)
     
     return Response({
@@ -646,3 +692,6 @@ def get_ai_response(request, response_id):
     )
     serializer = AIResponseSerializer(ai_response)
     return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+# ngrok http 8000/

@@ -10,6 +10,7 @@ urlpatterns = [
     path('auth/login/', views.login_view),
     path('auth/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('auth/logout/', views.logout_view),
+    path('auth/change_password/', views.change_password),
     path('auth/delete-account/', views.delete_account_view),
     path('auth/profile/', views.get_profile_view),
     path('auth/profile/update/', views.update_profile_view),
