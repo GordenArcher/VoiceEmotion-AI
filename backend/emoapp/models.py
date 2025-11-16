@@ -3,7 +3,7 @@ from django.contrib.auth.models import User
 # Create your models here.
 
 class UserProfile(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="profile")
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="userprofile")
     display_name = models.CharField(max_length=100, blank=True, null=True)
     bio = models.TextField(blank=True, null=True)
     avatar = models.ImageField(upload_to="avatars/", blank=True, null=True)
@@ -24,7 +24,7 @@ class VoiceRecording(models.Model):
     uploaded_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"{self.user.username} - {self.uploaded_at}"
+        return f"{self.user} - {self.uploaded_at}"
 
 
 class EmotionAnalysis(models.Model):
@@ -37,7 +37,7 @@ class EmotionAnalysis(models.Model):
     analyzed_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"{self.recording.user.username} - {self.emotion} ({self.confidence})"
+        return f"{self.recording.user} - {self.emotion} ({self.confidence})"
 
 
 class AIResponse(models.Model):
