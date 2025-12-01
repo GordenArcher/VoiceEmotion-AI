@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 
+from datetime import timedelta
 from pathlib import Path
 import os
 
@@ -26,7 +27,8 @@ SECRET_KEY = 'django-insecure-zobt5=gw$otjlxm!!$w+qvu&fouv(e^s81vz*c7&z2o%p-8*hf
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ["*", "192.168.8.103","https://4ad348c69eb9.ngrok-free.app", 'localhost']
+ALLOWED_HOSTS = ["*", "192.168.8.103",
+                 "https://4ad348c69eb9.ngrok-free.app", 'localhost']
 
 
 # Application definition
@@ -65,8 +67,6 @@ REST_FRAMEWORK = {
 }
 
 
-from datetime import timedelta
-
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=5),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=30),
@@ -79,8 +79,8 @@ SIMPLE_JWT = {
 CORS_ALLOW_ALL_ORIGINS = True
 
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:19000", 
-    "http://localhost:8081", 
+    "http://localhost:19000",
+    "http://localhost:8081",
     "http://127.0.0.1:19000",
     "http://127.0.0.1:8081",
     "https://4ad348c69eb9.ngrok-free.app"

@@ -44,7 +44,8 @@ def annotate_by_forson(modeladmin, request, queryset):
     simply posts a message to the admin UI so there's an observable change
     tied to the contributor.
     """
-    modeladmin.message_user(request, "Annotated by Forson Odonkor — contribution note recorded.")
+    modeladmin.message_user(
+        request, "Annotated by Forson Odonkor — contribution note recorded.")
 
 
 annotate_by_forson.short_description = "Annotate selected recordings (Forson)"
@@ -58,7 +59,8 @@ VoiceRecordingAdmin.actions.append(annotate_by_forson)
 # -------------------------------
 @admin.register(UserProfile)
 class UserProfileAdmin(admin.ModelAdmin):
-    list_display = ("id", "user", "display_name", "total_recordings", "created_at")
+    list_display = ("id", "user", "display_name",
+                    "total_recordings", "created_at")
     search_fields = ("user__username", "display_name")
     list_filter = ("created_at",)
     readonly_fields = ("created_at", "updated_at")
