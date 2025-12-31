@@ -1,4 +1,4 @@
-def _generate_response(emotion, confidence):
+def generate_response(emotion, confidence):
     """
     Generate contextual response based on emotion
     You can integrate with Claude API or other LLMs here

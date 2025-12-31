@@ -13,6 +13,9 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 from datetime import timedelta
 from pathlib import Path
 import os
+from dotenv import load_dotenv
+load_dotenv()
+
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -23,13 +26,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # SECURITY WARNING: keep the secret key used in production secret!
 # Read secret key and debug flag from environment for safer deployments
-SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', 'django-insecure-zobt5=gw$otjlxm!!$w+qvu&fouv(e^s81vz*c7&z2o%p-8*hf')
+SECRET_KEY = os.getenv('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.getenv('DJANGO_DEBUG', 'True').lower() in ('1', 'true', 'yes')
+DEBUG = os.getenv('DEBUG', 'True')
 
-ALLOWED_HOSTS = ["*", "192.168.8.103",
-                 "https://4ad348c69eb9.ngrok-free.app", 'localhost']
+ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '').split(',')
 
 
 # Application definition

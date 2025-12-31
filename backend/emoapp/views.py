@@ -1,3 +1,5 @@
+from urllib import request
+
 from django.contrib.auth import authenticate, get_user_model
 from rest_framework.decorators import api_view, permission_classes, authentication_classes, parser_classes
 from rest_framework.permissions import IsAuthenticated
@@ -5,7 +7,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework_simplejwt.tokens import RefreshToken
 from .models import UserProfile
-from .helper.response import _generate_response
+from .helper.response import generate_response
 User = get_user_model()
 from rest_framework.parsers import MultiPartParser, FormParser
 from django.shortcuts import get_object_or_404
@@ -28,8 +30,6 @@ logger = logging.getLogger(__name__)
 @permission_classes([])
 def register_view(request):
     data = request.data
-
-    print(data)
 
     username = data.get("username")
     email = data.get("email")
@@ -179,52 +179,53 @@ def logout_view(request):
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def change_password(request):
-   data = request.data
+    data = request.data
 
-   old_password = data.get("current_password")
-   new_password = data.get("new_password")
-   new_password2 = data.get("confirm_password")
+    old_password = data.get("current_password")
+    new_password = data.get("new_password")
+    new_password2 = data.get("confirm_password")
+    user = request.user
+   
+    try:
+        if not all([old_password, new_password, new_password2]):
+            return Response({
+                "status": "error",
+                "message": "All fields are required"
+            }, status=status.HTTP_400_BAD_REQUEST)
 
-   try:
-       if not all([old_password, new_password, new_password2]):
-           return Response({
-               "status": "error",
-               "message": "All fields are required"
-           }, status=status.HTTP_400_BAD_REQUEST)
+        if new_password != new_password2:
+            return Response({
+                "status": "error",
+                "message": "New passwords do not match"
+            }, status=status.HTTP_400_BAD_REQUEST)
 
-       if new_password != new_password2:
-           return Response({
-               "status": "error",
-               "message": "New passwords do not match"
-           }, status=status.HTTP_400_BAD_REQUEST)
+        
 
-       user = request.user
+        if not user.check_password(old_password):
+            return Response({
+                "status": "error",
+                "message": "Current password is incorrect"
+            }, status=status.HTTP_400_BAD_REQUEST)
 
-       if not user.check_password(old_password):
-           return Response({
-               "status": "error",
-               "message": "Current password is incorrect"
-           }, status=status.HTTP_400_BAD_REQUEST)
+        if user.check_password(new_password):
+            return Response({
+                "status": "error",
+                "message": "New password cannot be the same as the current password"
+            }, status=status.HTTP_400_BAD_REQUEST)
 
-       if user.check_password(new_password):
-           return Response({
-               "status": "error",
-               "message": "New password cannot be the same as the current password"
-           }, status=status.HTTP_400_BAD_REQUEST)
+        user.set_password(new_password)
+        user.save()
 
-       user.set_password(new_password)
-       user.save()
+        return Response({
+            "status": "success",
+            "message": f"Password has been changed successful"
+        }, status=status.HTTP_200_OK)
 
-       return Response({
-           "status": "success",
-           "message": f"Password has been changed successful"
-       }, status=status.HTTP_200_OK)
-
-   except Exception as e:
-       return Response({
-           "status": "error",
-           "message": "Unable to change password. Please try again."
-       }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    except Exception as e:
+        return Response({
+            "status": "error",
+            "message": "Unable to change password. Please try again."
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 
@@ -382,17 +383,11 @@ def upload_and_analyze(request):
             audio_file=audio_file
         )
         
-        # Get file path
         file_path = recording.audio_file.path
         
         if not os.path.exists(file_path):
             raise FileNotFoundError(f"Audio file not found at {file_path}")
         
-        print(f"\n{'='*60}")
-        print(f"🎤 Processing audio: {audio_file.name}")
-        print(f"📁 Saved to: {file_path}")
-        print(f"📊 File size: {audio_file.size / 1024:.2f} KB")
-        print(f"{'='*60}\n")
         
         model = EmotionRecognitionModel()
         prediction = model.predict(file_path)
@@ -404,9 +399,9 @@ def upload_and_analyze(request):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
         
-        print(f"🎯 PREDICTION: {prediction['emotion'].upper()}")
-        print(f"📈 Confidence: {prediction['confidence']:.1f}%")
-        print(f"\n📊 All Probabilities:")
+        print(f" PREDICTION: {prediction['emotion'].upper()}")
+        print(f" Confidence: {prediction['confidence']:.1f}%")
+        print(f"\n All Probabilities:")
         sorted_probs = sorted(prediction['probabilities'].items(), key=lambda x: x[1], reverse=True)
         for emotion, prob in sorted_probs:
             bar = "█" * int(prob / 2)
@@ -436,7 +431,7 @@ def upload_and_analyze(request):
         if recording and recording.pk:
             recording.delete()
         
-        print(f"\n❌ ERROR: {str(e)}")
+        print(f"\n ERROR: {str(e)}")
         import traceback
         traceback.print_exc()
         
@@ -550,7 +545,6 @@ def user_statistics(request):
     # Get all emotion analyses for user
     analyses = EmotionAnalysis.objects.filter(recording__in=user_recordings)
     
-    # Count emotions
     emotion_counts = {}
     total_confidence = {}
     
@@ -642,7 +636,7 @@ def generate_ai_response(request):
             )
         
         # Generate AI response based on emotion
-        response_text = _generate_response(latest_analysis.emotion, latest_analysis.confidence)
+        response_text = generate_response(latest_analysis.emotion, latest_analysis.confidence)
         
         # Save AI response
         ai_response = AIResponse.objects.create(

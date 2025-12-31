@@ -102,7 +102,7 @@ class EmotionRecognitionModel:
             features = np.hstack([mfccs, chroma, mel, contrast, tonnetz])
             
             # Total features: 40 + 12 + 128 + 7 + 6 = 193 features
-            print(f"✓ Extracted {len(features)} features (expected: 193)")
+            print(f" Extracted {len(features)} features (expected: 193)")
             
             return features
         
@@ -124,12 +124,12 @@ class EmotionRecognitionModel:
         if features is None:
             return None
 
-        # Preprocess
+        # Preprocess features - MUST MATCH TRAINING EXACTLY
         try:
             features = features.reshape(1, -1)
             features_scaled = self._scaler.transform(features)
 
-            # Predict
+            # Predict emotion
             prediction = self._model.predict(features_scaled, verbose=0)
             predicted_class = np.argmax(prediction, axis=1)[0]
             predicted_emotion = self._label_encoder.inverse_transform([predicted_class])[0]
